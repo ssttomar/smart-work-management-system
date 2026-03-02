@@ -87,6 +87,10 @@ public class SecurityConfig {
                 // Attendance — all roles, but service enforces ownership
                 .requestMatchers("/api/attendance/**").authenticated()
 
+                // AI Assistant — all authenticated roles, data scoping is
+                // handled inside AIService / PromptBuilderService
+                .requestMatchers("/api/ai/**").authenticated()
+
                 // Anything else requires a valid JWT
                 .anyRequest().authenticated()
             )

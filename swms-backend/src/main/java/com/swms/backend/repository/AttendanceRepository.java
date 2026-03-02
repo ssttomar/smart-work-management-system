@@ -2,6 +2,7 @@ package com.swms.backend.repository;
 
 import com.swms.backend.entity.Attendance;
 import com.swms.backend.entity.User;
+import com.swms.backend.enums.AttendanceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -37,4 +38,15 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      * Spring derives: WHERE user = ? AND date BETWEEN ? AND ?
      */
     List<Attendance> findByUserAndDateBetween(User user, LocalDate from, LocalDate to);
+
+    /**
+     * Attendance for a list of users on a specific date.
+     * Used by MANAGER AI context to see team attendance for today.
+     */
+    List<Attendance> findByUserInAndDate(List<User> users, LocalDate date);
+
+    /**
+     * Count attendance records by status — used by ADMIN AI stats.
+     */
+    long countByStatus(AttendanceStatus status);
 }

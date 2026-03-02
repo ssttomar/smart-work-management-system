@@ -7,17 +7,17 @@ import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
-const s = {
-  page:  { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f6fa' },
-  card:  { background: '#fff', borderRadius: 12, padding: '40px 48px', width: 440, boxShadow: '0 4px 24px rgba(0,0,0,0.1)' },
-  title: { fontSize: 24, fontWeight: 700, color: '#1a1a2e', marginBottom: 24 },
-  label: { display: 'block', marginBottom: 6, fontWeight: 600, color: '#333', fontSize: 14 },
-  input: { width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 6, fontSize: 15, marginBottom: 18, outline: 'none' },
-  select:{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 6, fontSize: 15, marginBottom: 18, background: '#fff' },
-  btn:   { width: '100%', padding: '12px', background: '#0f3460', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 600, cursor: 'pointer' },
-  err:   { background: '#ffeaea', color: '#c0392b', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 14 },
-  link:  { textAlign: 'center', marginTop: 18, fontSize: 14, color: '#888' },
+/* ── same palette as Home.js ─────────────────────────────────────── */
+const C = {
+  navy:   '#0f3460',
+  deep:   '#0a1f44',
+  accent: '#e94560',
+  purple: '#533483',
+  white:  '#ffffff',
 };
+
+const field = { width: '100%', padding: '11px 14px', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, fontSize: 15, marginBottom: 16, outline: 'none', background: 'rgba(255,255,255,0.10)', color: C.white, boxSizing: 'border-box' };
+const lbl   = { display: 'block', marginBottom: 6, fontWeight: 600, color: 'rgba(255,255,255,0.85)', fontSize: 14 };
 
 export default function Register() {
   const { login } = useAuth();
@@ -45,40 +45,95 @@ export default function Register() {
   };
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
-        <h2 style={s.title}>Create your SWMS account</h2>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: `linear-gradient(135deg, ${C.deep} 0%, ${C.navy} 50%, ${C.purple} 100%)`,
+      position: 'relative', overflow: 'hidden',
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      padding: '40px 16px',
+    }}>
+      {/* background blobs — same as Home hero */}
+      <div style={{ position: 'fixed', top: '8%', right: '6%', width: 520, height: 520, borderRadius: '50%', background: 'rgba(233,69,96,0.14)', filter: 'blur(90px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', bottom: '4%', left: '12%', width: 400, height: 400, borderRadius: '50%', background: 'rgba(83,52,131,0.28)', filter: 'blur(90px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', top: '45%', left: '3%', width: 280, height: 280, borderRadius: '50%', background: 'rgba(15,52,96,0.35)', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
-        {error && <div style={s.err}>{error}</div>}
+      {/* glass card */}
+      <div style={{
+        position: 'relative', zIndex: 1,
+        background: 'rgba(255,255,255,0.08)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        borderRadius: 20,
+        padding: '44px 48px',
+        width: 460,
+        boxShadow: '0 8px 48px rgba(0,0,0,0.35)',
+      }}>
+        {/* logo badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: `linear-gradient(135deg, ${C.navy}, ${C.accent})`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: C.white, fontWeight: 900, fontSize: 17,
+          }}>S</div>
+          <span style={{ fontWeight: 800, fontSize: 20, color: C.white, letterSpacing: '-0.5px' }}>Create your SWMS account</span>
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.55)', marginBottom: 26, fontSize: 13 }}>Join Smart Workforce Management System</p>
+
+        {error && (
+          <div style={{ background: 'rgba(233,69,96,0.18)', border: '1px solid rgba(233,69,96,0.45)', color: '#ff8096', borderRadius: 8, padding: '10px 14px', marginBottom: 18, fontSize: 14 }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
-          <label style={s.label}>Full Name</label>
-          <input style={s.input} name="name"       value={form.name}       onChange={handleChange} placeholder="Alice Smith"        required />
+          <label style={lbl}>Full Name</label>
+          <input style={field} name="name" value={form.name} onChange={handleChange} placeholder="Alice Smith" required />
 
-          <label style={s.label}>Email</label>
-          <input style={s.input} name="email" type="email" value={form.email} onChange={handleChange} placeholder="alice@company.com" required />
+          <label style={lbl}>Email</label>
+          <input style={field} name="email" type="email" value={form.email} onChange={handleChange} placeholder="alice@company.com" required />
 
-          <label style={s.label}>Password</label>
-          <input style={s.input} name="password" type="password" value={form.password} onChange={handleChange} placeholder="min 6 characters" required />
+          <label style={lbl}>Password</label>
+          <input style={field} name="password" type="password" value={form.password} onChange={handleChange} placeholder="min 6 characters" required />
 
-          <label style={s.label}>Department</label>
-          <input style={s.input} name="department" value={form.department} onChange={handleChange} placeholder="Engineering (optional)" />
+          <label style={lbl}>Department</label>
+          <input style={field} name="department" value={form.department} onChange={handleChange} placeholder="Engineering (optional)" />
 
-          <label style={s.label}>Role</label>
-          <select style={s.select} name="role" value={form.role} onChange={handleChange}>
+          <label style={lbl}>Role</label>
+          <select style={{ ...field, marginBottom: 24 }} name="role" value={form.role} onChange={handleChange}>
             <option value="EMPLOYEE">Employee</option>
             <option value="MANAGER">Manager</option>
             <option value="ADMIN">Admin</option>
           </select>
 
-          <button style={s.btn} type="submit" disabled={loading}>
+          <button
+            style={{ width: '100%', padding: '13px', background: C.accent, color: C.white, border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s', letterSpacing: '0.3px' }}
+            type="submit" disabled={loading}
+            onMouseEnter={e => e.currentTarget.style.background = '#c9374e'}
+            onMouseLeave={e => e.currentTarget.style.background = C.accent}
+          >
             {loading ? 'Creating account…' : 'Register'}
           </button>
         </form>
 
-        <p style={s.link}>
-          Already have an account? <Link to="/login">Sign in</Link>
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
+          Already have an account?{' '}
+          <Link to="/login" style={{ color: '#ff8096', fontWeight: 600, textDecoration: 'none' }}>Sign in</Link>
         </p>
+
+        <Link to="/" style={{
+          display: 'block', width: '100%', padding: '11px', marginTop: 12,
+          background: 'transparent', color: 'rgba(255,255,255,0.80)',
+          border: '1.5px solid rgba(255,255,255,0.30)', borderRadius: 8,
+          fontSize: 15, fontWeight: 600, cursor: 'pointer',
+          textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box',
+          transition: 'border-color 0.2s, color 0.2s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.7)'; e.currentTarget.style.color = C.white; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.30)'; e.currentTarget.style.color = 'rgba(255,255,255,0.80)'; }}
+        >← Home</Link>
       </div>
     </div>
   );
