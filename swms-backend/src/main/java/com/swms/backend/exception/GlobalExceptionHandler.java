@@ -63,9 +63,12 @@ public class GlobalExceptionHandler {
     }
 
     // ── 500 Internal Server Error ───────────────────────────────────────────
+    // Returns "message" key so the frontend (AIChatWidget) can display the real error.
+    // Previously used "error" key — frontend checks err.response?.data?.message.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneral(Exception ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred.";
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "An unexpected error occurred: " + ex.getMessage()));
+                .body(Map.of("message", msg, "error", msg));
     }
 }

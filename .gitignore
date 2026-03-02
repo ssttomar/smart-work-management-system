@@ -1,0 +1,56 @@
+# ============================================================
+# ENVIRONMENT SECRETS — never commit .env
+# ============================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ============================================================
+# BACKEND — Spring Boot / Maven (swms-backend)
+# ============================================================
+swms-backend/HELP.md
+swms-backend/target/
+swms-backend/build/
+swms-backend/.mvn/wrapper/maven-wrapper.jar
+
+# ============================================================
+# FRONTEND — React / Node (swms-frontend)
+# ============================================================
+swms-frontend/node_modules/
+swms-frontend/build/
+
+# ============================================================
+# IDEs & EDITORS
+# ============================================================
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Spring Tool Suite
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ============================================================
+# OS & LOGS
+# ============================================================
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

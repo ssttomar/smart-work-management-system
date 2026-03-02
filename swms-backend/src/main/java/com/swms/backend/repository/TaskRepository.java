@@ -38,4 +38,15 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
      * Filter by assigned employee AND status — used by employee's filtered view.
      */
     List<Task> findByAssignedToAndStatus(User assignedTo, TaskStatus status);
+
+    /**
+     * Fetch tasks assigned to any of the given users.
+     * Used by MANAGER AI context to see team workload.
+     */
+    List<Task> findByAssignedToIn(List<User> teamMembers);
+
+    /**
+     * Count tasks by status — used by ADMIN AI context for statistics.
+     */
+    long countByStatus(TaskStatus status);
 }

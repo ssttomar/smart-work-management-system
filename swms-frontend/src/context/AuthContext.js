@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('swms_token');
     localStorage.removeItem('swms_user');
     setUser(null);
-    navigate('/login');
+    navigate('/');
   };
 
   const isAdmin    = () => user?.role === 'ADMIN';

@@ -35,7 +35,9 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AIChatWidget   from './components/AIChatWidget';
 
+import Home       from './pages/Home';
 import Login      from './pages/Login';
 import Register   from './pages/Register';
 import Dashboard  from './pages/Dashboard';
@@ -54,7 +56,7 @@ export default function App() {
         <Routes>
 
           {/* ── Public routes ─────────────────────────────────────── */}
-          <Route path="/"         element={<Navigate to="/login" replace />} />
+          <Route path="/"         element={<Home />} />
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -84,6 +86,14 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
 
         </Routes>
+
+        {/*
+          AIChatWidget is rendered OUTSIDE <Routes> so it persists across
+          all page navigations. It reads `user` from AuthContext and
+          self-hides when the user is not authenticated (public pages).
+        */}
+        <AIChatWidget />
+
       </AuthProvider>
     </BrowserRouter>
   );
