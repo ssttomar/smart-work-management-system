@@ -40,6 +40,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByUserAndDateBetween(User user, LocalDate from, LocalDate to);
 
     /**
+     * Attendance records for all users within a date range.
+     */
+    List<Attendance> findByDateBetween(LocalDate from, LocalDate to);
+
+    /**
      * Attendance for a list of users on a specific date.
      * Used by MANAGER AI context to see team attendance for today.
      */
