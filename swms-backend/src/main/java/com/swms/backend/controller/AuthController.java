@@ -67,7 +67,13 @@ public class AuthController {
      * Response 201 — includes JWT so the user is logged in immediately.
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest req) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
+        // Prevent ADMIN accounts from being created through public registration
+        if (req.getRole() != null && req.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", "Admin accounts cannot be created via registration."));
+        }
+
         UserResponse saved = userService.register(req);
 
         String token = jwtUtil.generateToken(saved.getEmail(), saved.getRole());
@@ -99,12 +105,57 @@ public class AuthController {
      * On bad credentials Spring Security throws 401 automatically.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
         );
 
-        User user  = userService.findByEmail(req.getEmail());
+        User user = userService.findByEmail(req.getEmail());
+
+        // Admin accounts must use /auth/admin-login
+        if (user.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", "Admin accounts must sign in at /admin."));
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+
+        AuthResponse response = AuthResponse.builder()
+                .token(token)
+                .role(user.getRole().name())
+                .name(user.getName())
+                .email(user.getEmail())
+                .userId(user.getId())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    // ----------------------------------------------------------------
+    // POST /auth/admin-login
+    // ----------------------------------------------------------------
+
+    /**
+     * Authenticate an ADMIN user. Only accounts with role=ADMIN are accepted.
+     * MANAGER and EMPLOYEE accounts receive 403 Forbidden.
+     *
+     * Response 200: { "token": "...", "role": "ADMIN", ... }
+     * Response 403: non-admin credentials
+     */
+    @PostMapping("/admin-login")
+    public ResponseEntity<?> adminLogin(@Valid @RequestBody LoginRequest req) {
+        authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+        );
+
+        User user = userService.findByEmail(req.getEmail());
+
+        // Only ADMIN role is permitted on this endpoint
+        if (!user.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(java.util.Map.of("error", "Access denied. This portal is for administrators only."));
+        }
+
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
         AuthResponse response = AuthResponse.builder()
