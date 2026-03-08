@@ -1,5 +1,7 @@
 /**
- * Login.js — public login page.
+ * Login.js — public login page for MANAGER and EMPLOYEE only.
+ * Admin users must use /admin instead.
+ * The backend rejects ADMIN credentials at /auth/login.
  *
  * Flow:
  *   1. User submits email + password
@@ -68,15 +70,19 @@ export default function Login() {
         width: 420,
         boxShadow: '0 8px 48px rgba(0,0,0,0.35)',
       }}>
-        {/* logo badge */}
+        {/* logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: 10,
-            background: `linear-gradient(135deg, ${C.navy}, ${C.accent})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: C.white, fontWeight: 900, fontSize: 17,
-          }}>S</div>
-          <span style={{ fontWeight: 800, fontSize: 22, color: C.white, letterSpacing: '-0.5px' }}>SWMS</span>
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <defs>
+              <linearGradient id="loginLg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#ec4899" />
+              </linearGradient>
+            </defs>
+            <rect width="36" height="36" rx="10" fill="url(#loginLg)" />
+            <path d="M23.5 12C23.5 12 13.5 12 13.5 17C13.5 22 23.5 20 23.5 25C23.5 30 13.5 30 13.5 30" stroke="white" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+          </svg>
+          <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 22, color: C.white, letterSpacing: '-0.5px' }}>SWMS</span>
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.60)', marginBottom: 28, fontSize: 14 }}>Smart Workforce Management System</p>

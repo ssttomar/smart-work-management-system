@@ -1,18 +1,19 @@
 /**
- * ProtectedRoute.js — guards routes that require authentication or a specific role.
+ * ProtectedRoute.js - guards routes that require authentication or a specific role.
  *
  * Usage in App.js:
- *   <Route element={<ProtectedRoute />}>
- *     <Route path="/admin/dashboard" element={<AdminDashboard />} />
+ *   <Route element={<ProtectedRoute allowedRoles={['ADMIN']} loginPath="/admin" />}>
+ *     <Route path="/admin/dashboard" element={<Dashboard />} />
  *   </Route>
  *
- *   <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
- *     <Route path="/admin/users" element={<Users />} />
+ *   <Route element={<ProtectedRoute allowedRoles={['MANAGER']} />}>
+ *     <Route path="/manager/tasks" element={<Tasks />} />
  *   </Route>
  *
  * HOW IT WORKS:
- *   1. If no user in context (not logged in) → redirect to /login
- *   2. If allowedRoles is supplied and user's role is not in it → redirect to
+ *   1. If no user in context (not logged in) -> redirect to loginPath
+ *      (admin routes -> /admin, all others -> /login)
+ *   2. If allowedRoles is supplied and user's role is not in it -> redirect to
  *      their own dashboard (prevents URL-bar privilege escalation)
  *   3. Otherwise render the child route via <Outlet />
  */
@@ -26,11 +27,11 @@ const DASHBOARD_BY_ROLE = {
   EMPLOYEE: '/employee/dashboard',
 };
 
-export default function ProtectedRoute({ allowedRoles }) {
+export default function ProtectedRoute({ allowedRoles, loginPath = '/login' }) {
   const { user } = useAuth();
 
   // Not authenticated at all
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to={loginPath} replace />;
 
   // Authenticated but wrong role
   if (allowedRoles && !allowedRoles.includes(user.role)) {
