@@ -12,6 +12,20 @@ import { useAuth } from '../context/AuthContext';
 
 const STATUS_COLOR = { PRESENT: '#27ae60', ABSENT: '#e74c3c', LATE: '#f39c12', HALF_DAY: '#8e44ad' };
 
+const pad2 = (value) => String(value).padStart(2, '0');
+
+const getLocalDate = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+};
+
+const getLocalTime = () => {
+  const now = new Date();
+  return `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+};
+
+const toDisplayTime = (value) => (value ? value.slice(0, 5) : '');
+
 const s = {
   layout:  { display: 'flex' },
   main:    { flex: 1, padding: 32 },
@@ -30,15 +44,65 @@ const s = {
   cancel:  { flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: '#fff' },
   save:    { flex: 1, padding: 10, background: '#0f3460', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 },
   err:     { background: '#ffeaea', color: '#c0392b', padding: '10px', borderRadius: 6, marginBottom: 14 },
+  clockWrap: { marginBottom: 16, padding: 12, border: '1px solid #e5e7eb', borderRadius: 10, background: '#f9fafb' },
+  clockTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  clockLabel: { fontWeight: 600, fontSize: 13, color: '#1a1a2e' },
+  clockValue: { fontWeight: 700, fontSize: 14, color: '#0f3460' },
+  dial: { position: 'relative', width: 220, height: 220, margin: '0 auto 12px', borderRadius: '50%', background: '#fff', border: '1px solid #e5e7eb' },
+  dialBtn: {
+    position: 'absolute',
+    width: 34,
+    height: 34,
+    borderRadius: '50%',
+    border: '1px solid #d1d5db',
+    background: '#fff',
+    color: '#111827',
+    fontSize: 12,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dialBtnActive: { background: '#0f3460', color: '#fff', borderColor: '#0f3460' },
+  clockActions: { display: 'flex', gap: 10 },
+  clockStep: { padding: '6px 10px', borderRadius: 999, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 12 },
+  clockStepActive: { background: '#0f3460', color: '#fff', borderColor: '#0f3460' },
 };
 
 function CheckInModal({ onClose, onCreated, defaultUserId }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getLocalDate();
+  const nowTime = getLocalTime();
   const [form, setForm] = useState({
     userId: defaultUserId || '', date: today,
-    checkIn: '', checkOut: '', notes: '',
+    checkIn: nowTime, checkOut: '', notes: '',
   });
   const [err, setErr] = useState('');
+  const [showClock, setShowClock] = useState(false);
+  const [clockStep, setClockStep] = useState('hour');
+  const [tempHour, setTempHour] = useState(9);
+  const [tempMinute, setTempMinute] = useState(0);
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, date: getLocalDate(), checkIn: getLocalTime() }));
+  }, []);
+
+  const hours = Array.from({ length: 24 }, (_, index) => index);
+  const minutes = Array.from({ length: 12 }, (_, index) => index * 5);
+
+  const positionForIndex = (index, total, radius) => {
+    const angle = (index / total) * (Math.PI * 2) - Math.PI / 2;
+    const center = 110;
+    return {
+      left: center + radius * Math.cos(angle) - 17,
+      top: center + radius * Math.sin(angle) - 17,
+    };
+  };
+
+  const applyClockTime = () => {
+    const value = `${pad2(tempHour)}:${pad2(tempMinute)}:00`;
+    setForm((prev) => ({ ...prev, checkOut: value }));
+    setShowClock(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,13 +131,79 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
           <input style={s.input} type="date" value={form.date}
             onChange={e => setForm({...form, date: e.target.value})} required />
 
-          <label style={s.label}>Check-In Time</label>
-          <input style={s.input} type="time" step="1" value={form.checkIn}
-            onChange={e => setForm({...form, checkIn: e.target.value + ':00'})} />
+          <label style={s.label}>Check-In Time (auto)</label>
+          <input style={s.input} type="time" step="1" value={toDisplayTime(form.checkIn)} readOnly />
 
           <label style={s.label}>Check-Out Time</label>
-          <input style={s.input} type="time" step="1" value={form.checkOut}
-            onChange={e => setForm({...form, checkOut: e.target.value + ':00'})} />
+          <input
+            style={s.input}
+            type="text"
+            value={form.checkOut ? toDisplayTime(form.checkOut) : ''}
+            placeholder="Select from clock"
+            readOnly
+            onClick={() => setShowClock(true)}
+          />
+
+          {showClock && (
+            <div style={s.clockWrap}>
+              <div style={s.clockTop}>
+                <div style={s.clockLabel}>Select check-out time</div>
+                <div style={s.clockValue}>{pad2(tempHour)}:{pad2(tempMinute)}</div>
+              </div>
+              <div style={s.clockActions}>
+                <button
+                  type="button"
+                  style={{ ...s.clockStep, ...(clockStep === 'hour' ? s.clockStepActive : {}) }}
+                  onClick={() => setClockStep('hour')}
+                >
+                  Hour
+                </button>
+                <button
+                  type="button"
+                  style={{ ...s.clockStep, ...(clockStep === 'minute' ? s.clockStepActive : {}) }}
+                  onClick={() => setClockStep('minute')}
+                >
+                  Minute
+                </button>
+              </div>
+              <div style={s.dial}>
+                {(clockStep === 'hour' ? hours : minutes).map((value, index, arr) => {
+                  const total = arr.length;
+                  const radius = clockStep === 'hour' ? 86 : 74;
+                  const { left, top } = positionForIndex(index, total, radius);
+                  const isActive = clockStep === 'hour'
+                    ? value === tempHour
+                    : value === tempMinute;
+                  return (
+                    <button
+                      key={`${clockStep}-${value}`}
+                      type="button"
+                      style={{
+                        ...s.dialBtn,
+                        ...(isActive ? s.dialBtnActive : {}),
+                        left,
+                        top,
+                      }}
+                      onClick={() => {
+                        if (clockStep === 'hour') {
+                          setTempHour(value);
+                          setClockStep('minute');
+                        } else {
+                          setTempMinute(value);
+                        }
+                      }}
+                    >
+                      {pad2(value)}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={s.row}>
+                <button type="button" style={s.cancel} onClick={() => setShowClock(false)}>Cancel</button>
+                <button type="button" style={s.save} onClick={applyClockTime}>Save Time</button>
+              </div>
+            </div>
+          )}
 
           <label style={s.label}>Notes</label>
           <input style={s.input} value={form.notes}
