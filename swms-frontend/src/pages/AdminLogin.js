@@ -15,6 +15,17 @@ const C = {
   white:  '#ffffff',
 };
 
+const getErrorMessage = (err) => {
+  const data = err.response?.data;
+
+  if (typeof data === 'string') return data;
+  if (data?.error) return data.error;
+  if (data?.message) return data.message;
+  if (err.request) return 'Unable to reach the server. Please wait a moment and try again.';
+
+  return 'Access denied. Invalid admin credentials.';
+};
+
 export default function AdminLogin() {
   const { login } = useAuth();
   const [form, setForm]   = useState({ email: '', password: '' });
@@ -31,7 +42,7 @@ export default function AdminLogin() {
       const { data } = await api.post('/auth/admin-login', form);
       login(data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Access denied. Invalid admin credentials.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

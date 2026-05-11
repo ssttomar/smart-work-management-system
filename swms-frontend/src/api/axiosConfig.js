@@ -10,8 +10,38 @@
  */
 import axios from 'axios';
 
+const DEFAULT_PRODUCTION_API_URL = 'https://smart-work-management-system.onrender.com';
+
+const normalizeBaseUrl = (value) => {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+};
+
+const isLoopbackUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const getApiBaseUrl = () => {
+  const configuredBaseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL);
+  const isBrowser = typeof window !== 'undefined';
+  const isLocalhost = isBrowser && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+  // Respect an explicit production override, but ignore loopback URLs when
+  // the app is deployed so a stale Vercel value cannot point auth at localhost.
+  if (configuredBaseUrl && (isLocalhost || !isLoopbackUrl(configuredBaseUrl))) {
+    return configuredBaseUrl;
+  }
+
+  return isLocalhost ? 'http://localhost:8080' : DEFAULT_PRODUCTION_API_URL;
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080',
+  baseURL: getApiBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -33,7 +63,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url || '';
+    const isAuthRequest = requestUrl.startsWith('/auth/');
+
+    if (error.response?.status === 401 && !isAuthRequest) {
       // Token expired or invalid — clear storage and force re-login
       localStorage.removeItem('swms_token');
       localStorage.removeItem('swms_user');

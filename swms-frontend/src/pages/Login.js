@@ -23,6 +23,17 @@ const C = {
   white:  '#ffffff',
 };
 
+const getErrorMessage = (err) => {
+  const data = err.response?.data;
+
+  if (typeof data === 'string') return data;
+  if (data?.error) return data.error;
+  if (data?.message) return data.message;
+  if (err.request) return 'Unable to reach the server. Please wait a moment and try again.';
+
+  return 'Invalid credentials. Please try again.';
+};
+
 export default function Login() {
   const { login } = useAuth();
   const [form, setForm]   = useState({ email: '', password: '' });
@@ -39,7 +50,7 @@ export default function Login() {
       const { data } = await api.post('/auth/login', form);
       login(data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

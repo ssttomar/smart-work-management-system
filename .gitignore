@@ -20,6 +20,7 @@ swms-backend/.mvn/wrapper/maven-wrapper.jar
 # ============================================================
 swms-frontend/node_modules/
 swms-frontend/build/
+swms-frontend/build-check/
 
 # ============================================================
 # IDEs & EDITORS

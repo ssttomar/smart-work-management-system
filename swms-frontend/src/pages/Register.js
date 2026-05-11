@@ -19,6 +19,18 @@ const C = {
 const field = { width: '100%', padding: '11px 14px', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, fontSize: 15, marginBottom: 16, outline: 'none', background: 'rgba(255,255,255,0.10)', color: C.white, boxSizing: 'border-box' };
 const lbl   = { display: 'block', marginBottom: 6, fontWeight: 600, color: 'rgba(255,255,255,0.85)', fontSize: 14 };
 
+const getErrorMessage = (err) => {
+  const data = err.response?.data;
+
+  if (typeof data === 'string') return data;
+  if (data?.error) return data.error;
+  if (data?.message) return data.message;
+  if (data && typeof data === 'object') return Object.values(data).join(' | ');
+  if (err.request) return 'Unable to reach the server. Please wait a moment and try again.';
+
+  return 'Registration failed.';
+};
+
 export default function Register() {
   const { login } = useAuth();
   const [form, setForm]   = useState({ name: '', email: '', password: '', department: '', role: 'EMPLOYEE' });
@@ -35,10 +47,7 @@ export default function Register() {
       const { data } = await api.post('/auth/register', form);
       login(data);
     } catch (err) {
-      const msg = err.response?.data;
-      setError(typeof msg === 'object'
-        ? Object.values(msg).join(' | ')
-        : msg?.error || 'Registration failed.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
