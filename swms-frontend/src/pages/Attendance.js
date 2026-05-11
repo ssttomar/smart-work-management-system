@@ -60,7 +60,7 @@ const s = {
   badge:   (st) => ({ background: STATUS_COLOR[st] || '#ccc', color: '#fff', padding: '2px 10px', borderRadius: 4, fontSize: 12 }),
   modal:   { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
   mcard:   { background: '#fff', borderRadius: 12, padding: 32, width: 420 },
-  label:   { display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 },
+  label:   { display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14, color: '#1a1a2e' },
   input:   { width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, marginBottom: 16, fontSize: 14 },
   row:     { display: 'flex', gap: 12 },
   cancel:  { flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: '#fff' },
@@ -150,10 +150,12 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
     e.preventDefault();
     setErr('');
     try {
+      const normalizeTime = (value) => (value && value.length > 0 ? value : null);
       const payload = {
         ...form,
         userId: Number(form.userId),
-        checkIn: form.checkIn || getLocalTime(),
+        checkIn: normalizeTime(form.checkIn) || getLocalTime(),
+        checkOut: normalizeTime(form.checkOut),
       };
       const { data } = await api.post('/api/attendance', payload);
       onCreated(data);
