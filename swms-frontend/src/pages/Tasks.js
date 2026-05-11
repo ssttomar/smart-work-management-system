@@ -59,16 +59,40 @@ function CreateTaskModal({ onClose, onCreated }) {
         {err && <div style={s.err}>{err}</div>}
         <form onSubmit={handleSubmit}>
           <label style={s.label}>Title *</label>
-          <input style={s.input} value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
+          <input
+            style={s.input}
+            value={form.title}
+            onChange={e => setForm({...form, title: e.target.value})}
+            placeholder="e.g., Payroll review for Sales"
+            required
+          />
 
           <label style={s.label}>Description</label>
-          <input style={s.input} value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+          <input
+            style={s.input}
+            value={form.description}
+            onChange={e => setForm({...form, description: e.target.value})}
+            placeholder="Short summary of the task"
+          />
 
           <label style={s.label}>Assigned To (User ID) *</label>
-          <input style={s.input} type="number" value={form.assignedToId} onChange={e => setForm({...form, assignedToId: e.target.value})} required />
+          <input
+            style={s.input}
+            type="number"
+            value={form.assignedToId}
+            onChange={e => setForm({...form, assignedToId: e.target.value})}
+            placeholder="e.g., 7"
+            required
+          />
 
           <label style={s.label}>Deadline</label>
-          <input style={s.input} type="date" value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} />
+          <input
+            style={s.input}
+            type="date"
+            value={form.deadline}
+            onChange={e => setForm({...form, deadline: e.target.value})}
+            placeholder="yyyy-mm-dd"
+          />
 
           <label style={s.label}>Status</label>
           <select style={s.input} value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
