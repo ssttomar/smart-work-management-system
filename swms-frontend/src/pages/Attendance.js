@@ -81,12 +81,19 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
   const [clockStep, setClockStep] = useState('hour');
   const [tempHour, setTempHour] = useState(9);
   const [tempMinute, setTempMinute] = useState(0);
+  const [tempPeriod, setTempPeriod] = useState('AM');
 
   useEffect(() => {
+    const now = new Date();
+    const hour24 = now.getHours();
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+    setTempHour(hour12);
+    setTempMinute(now.getMinutes());
+    setTempPeriod(hour24 >= 12 ? 'PM' : 'AM');
     setForm((prev) => ({ ...prev, date: getLocalDate(), checkIn: getLocalTime() }));
   }, []);
 
-  const hours = Array.from({ length: 24 }, (_, index) => index);
+  const hours = Array.from({ length: 12 }, (_, index) => index + 1);
   const minutes = Array.from({ length: 12 }, (_, index) => index * 5);
 
   const positionForIndex = (index, total, radius) => {
@@ -99,7 +106,9 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
   };
 
   const applyClockTime = () => {
-    const value = `${pad2(tempHour)}:${pad2(tempMinute)}:00`;
+    const normalizedHour = tempHour % 12;
+    const hour24 = tempPeriod === 'PM' ? normalizedHour + 12 : normalizedHour;
+    const value = `${pad2(hour24)}:${pad2(tempMinute)}:00`;
     setForm((prev) => ({ ...prev, checkOut: value }));
     setShowClock(false);
   };
@@ -148,7 +157,7 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
             <div style={s.clockWrap}>
               <div style={s.clockTop}>
                 <div style={s.clockLabel}>Select check-out time</div>
-                <div style={s.clockValue}>{pad2(tempHour)}:{pad2(tempMinute)}</div>
+                <div style={s.clockValue}>{pad2(tempHour)}:{pad2(tempMinute)} {tempPeriod}</div>
               </div>
               <div style={s.clockActions}>
                 <button
@@ -164,6 +173,20 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
                   onClick={() => setClockStep('minute')}
                 >
                   Minute
+                </button>
+                <button
+                  type="button"
+                  style={{ ...s.clockStep, ...(tempPeriod === 'AM' ? s.clockStepActive : {}) }}
+                  onClick={() => setTempPeriod('AM')}
+                >
+                  AM
+                </button>
+                <button
+                  type="button"
+                  style={{ ...s.clockStep, ...(tempPeriod === 'PM' ? s.clockStepActive : {}) }}
+                  onClick={() => setTempPeriod('PM')}
+                >
+                  PM
                 </button>
               </div>
               <div style={s.dial}>
