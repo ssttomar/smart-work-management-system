@@ -27,7 +27,7 @@ const s = {
   delBtn:  { background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontSize: 13 },
   modal:   { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
   mcard:   { background: '#fff', borderRadius: 12, padding: 32, width: 440 },
-  label:   { display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 },
+  label:   { display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14, color: '#1a1a2e' },
   input:   { width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, marginBottom: 16, fontSize: 14 },
   row:     { display: 'flex', gap: 12 },
   cancel:  { flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: '#fff' },
@@ -35,9 +35,10 @@ const s = {
   err:     { background: '#ffeaea', color: '#c0392b', padding: '10px', borderRadius: 6, marginBottom: 14 },
 };
 
-function CreateTaskModal({ onClose, onCreated }) {
+function CreateTaskModal({ onClose, onCreated, employees }) {
   const [form, setForm] = useState({ title: '', description: '', assignedToId: '', deadline: '', status: 'TODO' });
   const [err, setErr]   = useState('');
+  const hasEmployees = employees?.length > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,15 +76,31 @@ function CreateTaskModal({ onClose, onCreated }) {
             placeholder="Short summary of the task"
           />
 
-          <label style={s.label}>Assigned To (User ID) *</label>
-          <input
-            style={s.input}
-            type="number"
-            value={form.assignedToId}
-            onChange={e => setForm({...form, assignedToId: e.target.value})}
-            placeholder="e.g., 7"
-            required
-          />
+          <label style={s.label}>Assigned To *</label>
+          {hasEmployees ? (
+            <select
+              style={s.input}
+              value={form.assignedToId}
+              onChange={e => setForm({...form, assignedToId: e.target.value})}
+              required
+            >
+              <option value="" disabled>Select an employee</option>
+              {employees.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name} ({user.email})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              style={s.input}
+              type="number"
+              value={form.assignedToId}
+              onChange={e => setForm({...form, assignedToId: e.target.value})}
+              placeholder="Employee user ID (e.g., 7)"
+              required
+            />
+          )}
 
           <label style={s.label}>Deadline</label>
           <input
@@ -112,7 +129,9 @@ function CreateTaskModal({ onClose, onCreated }) {
 export default function Tasks() {
   const { isAdmin, isManager } = useAuth();
   const canManage = isAdmin() || isManager();
+  const canViewUsers = isAdmin();
   const [tasks,  setTasks]  = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [error, setError]   = useState('');
 
@@ -123,7 +142,20 @@ export default function Tasks() {
     } catch (e) { setError('Failed to load tasks.'); }
   };
 
-  useEffect(() => { load(); }, []);
+  const loadEmployees = async () => {
+    if (!canViewUsers) return;
+    try {
+      const { data } = await api.get('/api/users');
+      setEmployees(data.filter((user) => user.role === 'EMPLOYEE'));
+    } catch (e) {
+      setEmployees([]);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    loadEmployees();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this task?')) return;
@@ -140,6 +172,7 @@ export default function Tasks() {
         <CreateTaskModal
           onClose={() => setShowModal(false)}
           onCreated={(t) => setTasks([t, ...tasks])}
+          employees={employees}
         />
       )}
       <div style={s.layout}>
