@@ -24,7 +24,29 @@ const getLocalTime = () => {
   return `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
 };
 
-const toDisplayTime = (value) => (value ? value.slice(0, 5) : '');
+const toDisplayTime12 = (value) => {
+  if (!value) return '';
+  const [hourText, minuteText] = value.split(':');
+  const hour24 = Number(hourText || 0);
+  const minute = Number(minuteText || 0);
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${pad2(hour12)}:${pad2(minute)} ${period}`;
+};
+
+const toClockState = (value) => {
+  if (!value) {
+    return { hour: 9, minute: 0, period: 'AM' };
+  }
+  const [hourText, minuteText] = value.split(':');
+  const hour24 = Number(hourText || 0);
+  const minute = Number(minuteText || 0);
+  return {
+    hour: hour24 % 12 === 0 ? 12 : hour24 % 12,
+    minute,
+    period: hour24 >= 12 ? 'PM' : 'AM',
+  };
+};
 
 const s = {
   layout:  { display: 'flex' },
@@ -77,20 +99,21 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
     checkIn: nowTime, checkOut: '', notes: '',
   });
   const [err, setErr] = useState('');
+  const isUserLocked = Boolean(defaultUserId);
   const [showClock, setShowClock] = useState(false);
   const [clockStep, setClockStep] = useState('hour');
   const [tempHour, setTempHour] = useState(9);
   const [tempMinute, setTempMinute] = useState(0);
   const [tempPeriod, setTempPeriod] = useState('AM');
+  const [activeField, setActiveField] = useState('checkOut');
 
   useEffect(() => {
-    const now = new Date();
-    const hour24 = now.getHours();
-    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-    setTempHour(hour12);
-    setTempMinute(now.getMinutes());
-    setTempPeriod(hour24 >= 12 ? 'PM' : 'AM');
-    setForm((prev) => ({ ...prev, date: getLocalDate(), checkIn: getLocalTime() }));
+    const nowTimeValue = getLocalTime();
+    const clockState = toClockState(nowTimeValue);
+    setTempHour(clockState.hour);
+    setTempMinute(clockState.minute);
+    setTempPeriod(clockState.period);
+    setForm((prev) => ({ ...prev, date: getLocalDate(), checkIn: nowTimeValue }));
   }, []);
 
   const hours = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -109,15 +132,29 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
     const normalizedHour = tempHour % 12;
     const hour24 = tempPeriod === 'PM' ? normalizedHour + 12 : normalizedHour;
     const value = `${pad2(hour24)}:${pad2(tempMinute)}:00`;
-    setForm((prev) => ({ ...prev, checkOut: value }));
+    setForm((prev) => ({ ...prev, [activeField]: value }));
     setShowClock(false);
+  };
+
+  const openClockFor = (field) => {
+    const clockState = toClockState(form[field]);
+    setTempHour(clockState.hour);
+    setTempMinute(clockState.minute);
+    setTempPeriod(clockState.period);
+    setClockStep('hour');
+    setActiveField(field);
+    setShowClock(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErr('');
     try {
-      const payload = { ...form, userId: Number(form.userId) };
+      const payload = {
+        ...form,
+        userId: Number(form.userId),
+        checkIn: form.checkIn || getLocalTime(),
+      };
       const { data } = await api.post('/api/attendance', payload);
       onCreated(data);
       onClose();
@@ -133,24 +170,36 @@ function CheckInModal({ onClose, onCreated, defaultUserId }) {
         {err && <div style={s.err}>{err}</div>}
         <form onSubmit={handleSubmit}>
           <label style={s.label}>User ID *</label>
-          <input style={s.input} type="number" value={form.userId}
-            onChange={e => setForm({...form, userId: e.target.value})} required />
+          <input
+            style={s.input}
+            type="number"
+            value={form.userId}
+            onChange={e => setForm({...form, userId: e.target.value})}
+            readOnly={isUserLocked}
+            required
+          />
 
           <label style={s.label}>Date *</label>
           <input style={s.input} type="date" value={form.date}
             onChange={e => setForm({...form, date: e.target.value})} required />
 
           <label style={s.label}>Check-In Time (auto)</label>
-          <input style={s.input} type="time" step="1" value={toDisplayTime(form.checkIn)} readOnly />
+          <input
+            style={s.input}
+            type="text"
+            value={toDisplayTime12(form.checkIn)}
+            readOnly
+            onClick={() => openClockFor('checkIn')}
+          />
 
           <label style={s.label}>Check-Out Time</label>
           <input
             style={s.input}
             type="text"
-            value={form.checkOut ? toDisplayTime(form.checkOut) : ''}
+            value={toDisplayTime12(form.checkOut)}
             placeholder="Select from clock"
             readOnly
-            onClick={() => setShowClock(true)}
+            onClick={() => openClockFor('checkOut')}
           />
 
           {showClock && (
